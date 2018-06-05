@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package mbox;
+
+service Mail {
+	// メールを送信する。
+	rpc Send (Message) returns (Result);
+
+	// 新着メールを受信する。
+	rpc Receive (Folder) returns (stream Message);
+}
+
+message Message {
+	string from = 1;
+	repeated string to = 2;
+	string subject = 3;
+	oneof body {
+		string text = 4;
+		string html = 5;
+	}
+}
+
+message Result {
+}
+
+message Folder {
+	string name = 1;
+}
