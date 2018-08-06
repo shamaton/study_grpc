@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/shamaton/study_grpc/msgpack/encoding"
-	pb "github.com/shamaton/study_grpc/msgpack/proto"
+	"github.com/shamaton/study_grpc_go/msgpack/encoding"
+	pb "github.com/shamaton/study_grpc_go/msgpack/proto"
 	"google.golang.org/grpc"
 )
 

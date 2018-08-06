@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
-	pb "github.com/shamaton/study_grpc/eureka/proto"
-	"github.com/shamaton/study_grpc/eureka/service"
+	pb "github.com/shamaton/study_grpc_go/eureka/proto"
+	"github.com/shamaton/study_grpc_go/eureka/service"
 	"google.golang.org/grpc"
 )
 

@@ -5,7 +5,7 @@ import (
 	"io"
 	"log"
 
-	pb "github.com/shamaton/study_grpc/fenrir/proto"
+	pb "github.com/shamaton/study_grpc_go/fenrir/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
