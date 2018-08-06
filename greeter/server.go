@@ -1,47 +1,33 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/shamaton/study_grpc_go/greeter/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
-type Service struct{}
+type service struct{}
 
-func (s *Service) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
+func (s *service) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Print("Received Say.Hello request")
 	rsp := new(pb.HelloReply)
-	rsp.Message = "Hello " + req.Name
+	rsp.Message = "Hello " + req.Name + ". " + fmt.Sprint(time.Now().Unix())
 	return rsp, nil
 }
 
 func main() {
 
-	l, err := net.Listen("tcp", ":50051")
+	l, err := net.Listen("tcp", ":9999")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &Service{})
+	pb.RegisterGreeterServer(s, &service{})
 	s.Serve(l)
 
-	/*
-		service := grpc.NewService(
-			micro.Name("go.micro.srv.greeter"),
-		)
-
-		// optionally setup command line usage
-		service.Init()
-
-		// Register Handlers
-		hello.RegisterSayHandler(service.Server(), new(Say))
-
-		// Run server
-		if err := service.Run(); err != nil {
-			log.Fatal(err)
-		}
-	*/
 }
