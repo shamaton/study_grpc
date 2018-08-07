@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+top:
+
 	conn, err := grpc.Dial(":5000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalln("net.Dial:", err)
@@ -44,6 +46,7 @@ func main() {
 		log.Fatalln("connect:", err)
 	}
 
+	stop := false
 	go func() {
 		for {
 			select {
@@ -52,11 +55,19 @@ func main() {
 				case event.GetJoin() != nil:
 					fmt.Printf("%s has joined.\n", event.GetJoin().Name)
 				case event.GetLeave() != nil:
-					fmt.Printf("%s has left.\n", event.GetJoin().Name)
+					fmt.Printf("%s has left.\n", event.GetLeave().Name)
 				case event.GetLog() != nil:
 					l := event.GetLog()
 					fmt.Printf("%s> %s\n", l.Name, l.Message)
+
+				case event.GetExit() != nil:
+					log.Println("event goroutine stop.")
+					stop = true
+					break
 				}
+			}
+			if stop {
+				break
 			}
 		}
 	}()
@@ -66,6 +77,12 @@ func main() {
 		fmt.Print("> ")
 		if n, err := fmt.Scanln(&message); err == io.EOF {
 			return
+		} else if message == "bye" {
+			err := Leave(client, sid)
+			if err != nil {
+				log.Fatalln("leave:", err)
+			}
+			break
 		} else if n > 0 {
 			err := Say(client, sid, message)
 			if err != nil {
@@ -73,6 +90,14 @@ func main() {
 			}
 		}
 	}
+
+	for {
+		if stop {
+			break
+		}
+	}
+	conn.Close()
+	goto top
 }
 
 func Authorize(client pb.ChatClient, name string) (sid []byte, err error) {
@@ -107,6 +132,12 @@ func Connect(client pb.ChatClient, sid []byte) (events chan *pb.Event, err error
 				log.Fatalln("stream.Recv", err)
 			}
 			events <- event
+
+			// exit
+			if event.GetExit() != nil {
+				log.Println("reply ok from server")
+				return
+			}
 		}
 	}()
 	return
@@ -118,5 +149,13 @@ func Say(client pb.ChatClient, sid []byte, message string) error {
 		Message:   message,
 	}
 	_, err := client.Say(context.Background(), &req)
+	return err
+}
+
+func Leave(client pb.ChatClient, sid []byte) error {
+	req := pb.CommandLeave{
+		SessionId: sid,
+	}
+	_, err := client.Leave(context.Background(), &req)
 	return err
 }

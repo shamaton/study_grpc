@@ -148,6 +148,10 @@ func (cs *chatServer) Connect(req *pb.RequestConnect, stream pb.Chat_ConnectServ
 		}
 	})
 	defer cs.withReadLock(func() {
+		if _, ok := cs.buf[sid]; !ok {
+			return
+		}
+
 		log.Printf("Leave name=%s", name)
 		for _, buf := range cs.buf {
 			buf <- &pb.Event{
@@ -163,6 +167,7 @@ func (cs *chatServer) Connect(req *pb.RequestConnect, stream pb.Chat_ConnectServ
 	for {
 		select {
 		case <-stream.Context().Done():
+			log.Println(name, "'s context done ...")
 			return stream.Context().Err()
 		case event := <-buf:
 			if err := stream.Send(event); err != nil {
@@ -225,6 +230,68 @@ func (cs *chatServer) Say(ctx context.Context, req *pb.CommandSay) (*pb.None, er
 	})
 
 	return &pb.None{}, nil
+}
+
+func (cs *chatServer) Leave(ctx context.Context, req *pb.CommandLeave) (*pb.None, error) {
+	cs.in++
+
+	var (
+		sid  sessionID = alignSessionID(req.SessionId)
+		name string
+		err  error
+	)
+
+	defer cs.withWriteLock(func() {
+		if _, ok := cs.name[sid]; !ok {
+			err = errors.New("not authorized")
+			return
+		}
+		if _, ok := cs.buf[sid]; !ok {
+			err = errors.New("not found sid")
+			return
+		}
+		log.Println("send exit")
+		cs.buf[sid] <- &pb.Event{
+			Event: &pb.Event_Exit{Exit: &pb.EventExit{}},
+		}
+	})
+
+	cs.withReadLock(func() {
+		var ok bool
+		name, ok = cs.name[sid]
+		if !ok {
+			err = errors.New("not authorized")
+			return
+		}
+		if _, ok := cs.buf[sid]; !ok {
+			err = errors.New("not found sid")
+			return
+		}
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	//defer cs.withWriteLock(func() { cs.unsafeExpire(sid) })
+
+	go cs.withReadLock(func() {
+		log.Printf("Log name=%s leaving...", name)
+		for key, buf := range cs.buf {
+			// dont send myself
+			if key == sid {
+				continue
+			}
+			buf <- &pb.Event{
+				Event: &pb.Event_Leave{
+					Leave: &pb.EventLeave{
+						Name: name,
+					},
+				},
+			}
+		}
+	})
+
+	return &pb.None{}, err
 }
 
 func main() {
