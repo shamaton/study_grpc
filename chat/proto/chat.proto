@@ -4,6 +4,7 @@ service Chat {
   rpc Authorize(RequestAuthorize) returns (ResponseAuthorize);
   rpc Connect(RequestConnect) returns (stream Event);
   rpc Say(CommandSay) returns (None);
+  rpc Leave(CommandLeave) returns (None);
 }
 
 message None {}
@@ -25,12 +26,17 @@ message CommandSay {
   string message = 2;
 }
 
+message CommandLeave {
+    bytes session_id = 1;
+}
+
 message Event {
   oneof event {
     EventNone none = 1;
     EventJoin join = 2;
     EventLeave leave = 3;
     EventLog log = 4;
+    EventExit exit = 5;
   }
 }
 
@@ -48,3 +54,5 @@ message EventLog {
   string name = 1;
   string message = 2;
 }
+
+message EventExit {}
