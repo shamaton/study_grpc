@@ -60,8 +60,8 @@ top:
 					l := event.GetLog()
 					fmt.Printf("%s> %s\n", l.Name, l.Message)
 
-				case event.GetExit() != nil:
-					log.Println("event goroutine stop.")
+				case event == nil:
+					log.Println("close server streaming")
 					stop = true
 					break
 				}
@@ -122,22 +122,18 @@ func Connect(client pb.ChatClient, sid []byte) (events chan *pb.Event, err error
 	}
 	events = make(chan *pb.Event, 1000)
 	go func() {
-		defer func() { close(events) }()
+		defer func() { log.Println("close connection"); close(events) }()
 		for {
 			event, err := stream.Recv()
+			// exit
 			if err == io.EOF {
+				log.Println("server accepted your leave signal")
 				return
 			}
 			if err != nil {
 				log.Fatalln("stream.Recv", err)
 			}
 			events <- event
-
-			// exit
-			if event.GetExit() != nil {
-				log.Println("reply ok from server")
-				return
-			}
 		}
 	}()
 	return
