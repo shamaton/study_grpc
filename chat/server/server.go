@@ -297,7 +297,7 @@ func (cs *chatServer) Leave(ctx context.Context, req *pb.CommandLeave) (*pb.None
 func main() {
 	flag.Parse()
 
-	lis, err := net.Listen("tcp", ":5000")
+	lis, err := net.Listen("tcp", ":9999")
 	if err != nil {
 		log.Fatalln("net.Listen:", err)
 	}
