@@ -180,7 +180,7 @@ func (cs *chatServer) Connect(req *pb.RequestConnect, stream pb.Chat_ConnectServ
 			}
 			cs.out++
 		case <-tick:
-			if err := stream.Send(&pb.Event{Event: &pb.Event_None{None: &pb.EventNone{}}}); err != nil {
+			if err := stream.Send(&pb.Event{Event: &pb.Event_Empty{Empty: &pb.EventEmpty{}}}); err != nil {
 				return err
 			}
 			cs.out++
