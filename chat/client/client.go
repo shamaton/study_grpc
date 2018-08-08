@@ -100,6 +100,7 @@ top:
 	goto top
 }
 
+// Authorize : user auth
 func Authorize(client pb.ChatClient, name string) (sid []byte, err error) {
 	req := pb.RequestAuthorize{
 		Name: name,
@@ -112,6 +113,7 @@ func Authorize(client pb.ChatClient, name string) (sid []byte, err error) {
 	return
 }
 
+// Connect : join chat room
 func Connect(client pb.ChatClient, sid []byte) (events chan *pb.Event, err error) {
 	req := pb.RequestConnect{
 		SessionId: sid,
@@ -139,6 +141,7 @@ func Connect(client pb.ChatClient, sid []byte) (events chan *pb.Event, err error
 	return
 }
 
+// Say : send message
 func Say(client pb.ChatClient, sid []byte, message string) error {
 	req := pb.CommandSay{
 		SessionId: sid,
@@ -148,6 +151,7 @@ func Say(client pb.ChatClient, sid []byte, message string) error {
 	return err
 }
 
+// Leave : leave chat room
 func Leave(client pb.ChatClient, sid []byte) error {
 	req := pb.CommandLeave{
 		SessionId: sid,
